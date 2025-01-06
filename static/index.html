@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Analysis</title>
+    <style>
+        video {
+            display: block;
+            margin: auto;
+        }
+        #results {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <div id="results">Loading...</div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const resultsDiv = document.getElementById('results');
+
+        // Request access to the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            video.srcObject = stream;
+        });
+
+        // Send frames to the backend every second
+        async function sendFrame() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            const frame = canvas.toDataURL('image/jpeg'); // Compress for transmission
+
+            // Send frame to backend
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frame })
+            });
+
+            const data = await response.json();
+            resultsDiv.innerText = `Detected Emotion: ${data.emotion}`;
+        }
+
+        // Periodically capture and send frames
+        setInterval(sendFrame, 1000);
+    </script>
+</body>
+</html>
