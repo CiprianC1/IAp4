@@ -27,7 +27,7 @@ primary_emotion_to_idx = {emotion: idx for idx, emotion in enumerate(primary_emo
 
 # Initialize MediaPipe Face Mesh
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=5, min_detection_confidence=0.5)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=10, min_detection_confidence=0.5)
 
 # Load ONNX model for emotion inference
 onnx_model_path = "emotion_model.onnx"
@@ -35,11 +35,11 @@ session = ort.InferenceSession(onnx_model_path)
 input_name = session.get_inputs()[0].name
 output_name = session.get_outputs()[0].name
 
-# Load ONNX model for emotion colour inference (this model is smaller and has a higher accuracy)
-onnx_model_colour = "emotion_model-8classes.onnx"
-session_colour = ort.InferenceSession(onnx_model_colour)
-input_name_colour = session_colour.get_inputs()[0].name
-output_name_colour = session_colour.get_outputs()[0].name
+# Load ONNX model for emotion colour inference (this model is smaller and has a higher accuracy) - deprecated
+# onnx_model_colour = "emotion_model-8classes.onnx"
+# session_colour = ort.InferenceSession(onnx_model_colour)
+# input_name_colour = session_colour.get_inputs()[0].name
+# output_name_colour = session_colour.get_outputs()[0].name
 
 def preprocess_image(base64_str):
     image_data = base64.b64decode(base64_str.split(",")[1])
@@ -94,12 +94,12 @@ def analyze_frame():
                 preds = session.run([output_name], {input_name: face_region})
                 emotion_idx = int(np.argmax(preds[0]))  # Convert to integer for JSON serialization
 
-                # Emotion colour inference
-                preds_colour = session_colour.run([output_name_colour], {input_name_colour: face_region})
-                emotion_idx_colour = int(np.argmax(preds_colour[0]))
+                # Emotion colour inference - this feature is not used anymore, as it is infered from the specific emotion
+                # preds_colour = session_colour.run([output_name_colour], {input_name_colour: face_region})
+                # emotion_idx_colour = int(np.argmax(preds_colour[0]))
                 # Append results
                 output.append({
-                    "primary_emotion_idx": emotion_idx_colour,
+                    "primary_emotion_idx": primary_emotion_to_idx[primary_emotion_mapping[emotion_list[emotion_idx]]], # emotion_idx_colour
                     "emotion_label": emotion_list[emotion_idx],
                     "hull": hull
                 })

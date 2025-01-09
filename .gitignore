@@ -27,9 +27,11 @@ share/python-wheels/
 MANIFEST
 
 *.pkl
+*.onnx
 data/
 face_detection_prototype.py
 screenshots/
+model_processing/training_raw_data.json
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
