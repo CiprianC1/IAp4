@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .thumbnail {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-radius: 20px;
+        }
+        
+        .thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+        }
+        
+        .delete-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header style="padding: 20px; background-color: #f5f5f5; display: flex; justify-content: space-between; align-items: center; font-family: Arial, sans-serif;">
+        <h1>Image Gallery of DASA</h1>
+        <a href="/" style="text-decoration: none; padding: 8px 16px; background-color: #4CAF50; color: white; border-radius: 4px;">Go Back</a>
+    </header>
+    <div class="gallery">
+        {% for image in images %}
+            <img src="{{ image.thumbnail }}" 
+                 class="thumbnail" 
+                 onclick="showImage('{{ image._id }}')" 
+                 alt="Gallery image">
+        {% endfor %}
+    </div>
+
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <img id="modalImage" class="modal-image" src="" alt="Full size image">
+            <button id="deleteButton" class="delete-btn" onclick="deleteImage()">Delete Image</button>
+        </div>
+    </div>
+
+    <script>
+        let currentImageId = null;
+        const modal = document.getElementById('imageModal');
+        
+        function showImage(imageId) {
+            currentImageId = imageId;
+            fetch(`/image/${imageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modalImage').src = data.image;
+                    modal.style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        function deleteImage() {
+            if (!currentImageId) return;
+            
+            fetch(`/delete/${currentImageId}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                modal.style.display = 'none';
+                location.reload();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    location.reload();
+                })
+                .catch(error => console.error('Error:', error));
+            }
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>

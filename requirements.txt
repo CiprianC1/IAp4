@@ -1,0 +1,9 @@
+Flask
+pymongo
+Pillow
+numpy
+torch
+torchvision
+opencv-python
+mediapipe
+onnxruntime

@@ -1,0 +1,34 @@
+services:
+    mongo:
+        image: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: 4mKHXb-Zgnek5-DCUiLG
+        ports:
+            - 27017:27017
+        volumes:
+            - ./data:/data/db
+        networks:
+            - database
+    app:
+        build: .
+        restart: always
+        ports:
+            - 8888:8888
+        depends_on:
+            - mongo
+        environment:
+            MONGO_SUPER_USER_NAME: root
+            MONGO_SUPER_USER_PASSWORD: 4mKHXb-Zgnek5-DCUiLG
+            MONGO_SERVER: mongo
+        networks:
+            - database
+            - exposed
+
+networks:
+    database:
+        internal: true
+        driver: bridge
+    exposed:
+        driver: bridge
